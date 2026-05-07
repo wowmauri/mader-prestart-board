@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MADER Prestart Board</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #f1f5f9; min-height: 100vh; }
+  .container { max-width: 1400px; margin: 0 auto; padding: 16px; }
+
+  .header { background: linear-gradient(135deg, #fbbf24, #f59e0b); border-radius: 16px 16px 0 0; padding: 24px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+  .header h1 { font-size: 2.2rem; font-weight: 900; color: #1e293b; text-transform: uppercase; letter-spacing: -0.5px; }
+
+  .dark-section { background: #1e293b; padding: 20px; border-radius: 0 0 16px 16px; margin-bottom: 24px; }
+  .top-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+
+  .card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; }
+  .card-header { padding: 12px 16px; font-weight: 800; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  .card-header.yellow { background: #fbbf24; color: #1e293b; }
+  .card-header.blue { background: #3b82f6; color: white; }
+  .card-body { padding: 12px; }
+
+  .editable { width: 100%; border: none; border-bottom: 2px solid transparent; padding: 6px 4px; font-size: 0.9rem; background: transparent; transition: all 0.2s; color: #334155; }
+  .editable:focus { outline: none; border-bottom-color: #fbbf24; background: #fffbeb; }
+  .editable::placeholder { color: #94a3b8; font-style: italic; }
+
+  .list-item { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .icon { width: 18px; height: 18px; flex-shrink: 0; }
+
+  .add-btn { width: 100%; padding: 8px; border: 2px dashed #cbd5e1; border-radius: 8px; background: transparent; color: #64748b; cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: all 0.2s; margin-top: 6px; }
+  .add-btn:hover { border-color: #94a3b8; color: #475569; background: #f8fafc; }
+
+  .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; font-size: 0.8rem; }
+  .cal-day { padding: 6px; border-radius: 6px; font-weight: 600; color: #475569; }
+  .cal-day.today { background: #fbbf24; color: #1e293b; }
+  .cal-day:hover:not(.today) { background: #f1f5f9; cursor: pointer; }
+  .cal-header { font-size: 0.7rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; padding: 4px; }
+
+  .table-section { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 24px; }
+  .table-header-bar { background: #1e293b; padding: 16px; text-align: center; }
+  .table-header-bar h2 { color: white; font-size: 1.2rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+
+  .table-headers { display: grid; grid-template-columns: 80px 1fr 1fr 3fr; gap: 12px; padding: 12px 16px; background: #fbbf24; font-weight: 800; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #1e293b; }
+  .table-headers.mobile { display: none; }
+
+  .task-row { display: grid; grid-template-columns: 80px 1fr 1fr 3fr; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #e2e8f0; align-items: start; }
+  .task-row:hover { background: #f8fafc; }
+  .task-row .col { min-width: 0; }
+  .task-row .col input { font-weight: 600; }
+
+  .hazard-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+  .hazard-group { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; position: relative; }
+  .hazard-group:hover { border-color: #cbd5e1; }
+  .delete-group { position: absolute; top: -8px; right: -8px; width: 24px; height: 24px; border-radius: 50%; background: #ef4444; color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; opacity: 0; transition: opacity 0.2s; box-shadow: 0 2px 8px rgba(239,68,68,0.3); }
+  .hazard-group:hover .delete-group { opacity: 1; }
+
+  .group-section-title { display: flex; align-items: center; gap: 6px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; margin-bottom: 6px; }
+  .group-section-title.hazards { color: #dc2626; }
+  .group-section-title.controls { color: #16a34a; margin-top: 10px; }
+
+  .sub-add-btn { font-size: 0.75rem; color: #64748b; background: none; border: none; cursor: pointer; padding: 2px 0; display: flex; align-items: center; gap: 4px; margin-top: 4px; }
+  .sub-add-btn:hover { color: #475569; }
+  .sub-delete { color: #cbd5e1; cursor: pointer; font-size: 12px; padding: 2px; }
+  .sub-delete:hover { color: #ef4444; }
+
+  .add-group-btn { grid-column: 1 / -1; padding: 12px; border: 2px dashed #fbbf24; border-radius: 10px; background: #fffbeb; color: #b45309; cursor: pointer; font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; }
+  .add-group-btn:hover { background: #fef3c7; border-color: #f59e0b; }
+
+  .add-row-btn { width: 100%; padding: 16px; background: #f8fafc; border: none; border-top: 1px solid #e2e8f0; color: #64748b; cursor: pointer; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; }
+  .add-row-btn:hover { background: #f1f5f9; color: #475569; }
+
+  .bottom-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+
+  .dark-card { background: #1e293b; border-radius: 12px; padding: 20px; color: white; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+  .dark-card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .comm-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #334155; }
+  .comm-row:last-child { border-bottom: none; }
+  .comm-label { font-size: 0.85rem; color: #94a3b8; }
+  .comm-input { background: transparent; border: none; border-bottom: 1px solid #475569; color: #fbbf24; font-weight: 600; text-align: right; width: 140px; padding: 4px; font-size: 0.9rem; }
+  .comm-input:focus { outline: none; border-bottom-color: #fbbf24; }
+  .comm-input::placeholder { color: #64748b; }
+
+  .weather-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px; }
+  .weather-item { background: #334155; border-radius: 10px; padding: 16px 8px; text-align: center; }
+  .weather-icon { font-size: 1.5rem; margin-bottom: 4px; }
+  .weather-value { font-size: 1.4rem; font-weight: 800; color: white; }
+  .weather-label { font-size: 0.7rem; color: #94a3b8; margin-top: 2px; text-transform: uppercase; }
+  .weather-fetch { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .weather-fetch input { flex: 1; min-width: 100px; background: #334155; border: 1px solid #475569; border-radius: 6px; padding: 6px 10px; color: white; font-size: 0.85rem; }
+  .weather-fetch input:focus { outline: none; border-color: #fbbf24; }
+  .weather-fetch button { background: #fbbf24; color: #1e293b; border: none; border-radius: 6px; padding: 6px 14px; font-weight: 700; cursor: pointer; font-size: 0.85rem; transition: all 0.2s; white-space: nowrap; }
+  .weather-fetch button:hover { background: #f59e0b; }
+  .weather-fetch button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .weather-fetch button.secondary { background: #3b82f6; color: white; }
+  .weather-fetch button.secondary:hover { background: #2563eb; }
+
+  .loc-status { font-size: 0.75rem; color: #94a3b8; margin-top: 6px; min-height: 18px; }
+  .loc-status.success { color: #4ade80; }
+  .loc-status.error { color: #f87171; }
+
+  .focus-card { background: #1e293b; border-radius: 12px; padding: 20px; color: white; }
+  .focus-card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 12px; }
+  .focus-input { width: 100%; background: transparent; border: none; border-bottom: 2px solid #475569; color: #fbbf24; font-size: 1.1rem; font-weight: 700; padding: 8px 0; }
+  .focus-input:focus { outline: none; border-bottom-color: #fbbf24; }
+
+  .footer-card { background: linear-gradient(135deg, #fbbf24, #f59e0b); border-radius: 12px; padding: 20px; color: #1e293b; }
+  .footer-card h3 { font-size: 1.3rem; font-weight: 900; text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+  .footer-card p { font-size: 0.9rem; font-weight: 700; margin-bottom: 6px; }
+
+  .deploy-banner { background: linear-gradient(135deg, #10b981, #059669); border-radius: 12px; padding: 16px 20px; color: white; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(16,185,129,0.3); }
+  .deploy-banner h3 { font-size: 1rem; font-weight: 800; margin-bottom: 8px; }
+  .deploy-banner code { background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 0.85rem; }
+  .deploy-banner a { color: #fef3c7; text-decoration: underline; }
+  .deploy-banner a:hover { color: white; }
+
+  @media (max-width: 768px) {
+    .header h1 { font-size: 1.5rem; }
+    .table-headers { display: none; }
+    .table-headers.mobile { display: block; background: #fbbf24; padding: 12px; font-weight: 800; text-align: center; color: #1e293b; }
+    .task-row { grid-template-columns: 1fr; gap: 8px; padding: 16px; border: 1px solid #e2e8f0; border-radius: 12px; margin: 8px; }
+    .task-row .col::before { content: attr(data-label); font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: #94a3b8; display: block; margin-bottom: 4px; }
+    .hazard-groups { grid-template-columns: 1fr; }
+    .bottom-grid { grid-template-columns: 1fr; }
+    .weather-grid { grid-template-columns: 1fr; }
+    .weather-fetch { flex-direction: column; }
+    .weather-fetch button { width: 100%; }
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .animate-in { animation: fadeIn 0.3s ease-out; }
+
+  .loading { display: inline-block; width: 16px; height: 16px; border: 2px solid #1e293b; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Deploy Banner -->
+  <div class="deploy-banner">
+    <h3>🚀 Want to put this online?</h3>
+    <p style="font-size:0.9rem;opacity:0.95;">
+      <strong>Free hosting:</strong> Upload this file to <a href="https://app.netlify.com/drop" target="_blank">Netlify Drop</a> (drag & drop!) or <a href="https://pages.cloudflare.com/" target="_blank">Cloudflare Pages</a>.<br>
+      <strong>GitHub:</strong> Push to a repo → enable <a href="https://pages.github.com/" target="_blank">GitHub Pages</a> for free hosting.<br>
+      <strong>⚠️ Important:</strong> Geolocation only works on <code>https://</code> sites (not <code>http://</code> or <code>file://</code>).
+    </p>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <h1>MADER Prestart Board</h1>
+  </div>
+
+  <!-- Top Section -->
+  <div class="dark-section">
+    <div class="top-grid">
+      <!-- Safety Negatives -->
+      <div class="card">
+        <div class="card-header yellow">Safety<br><span style="font-size:0.75rem;font-weight:600;">What Wasn't As Safe As It Could Have Been?</span></div>
+        <div class="card-body" id="negatives"></div>
+        <button class="add-btn" onclick="addItem('negatives')">+ Add Item</button>
+      </div>
+
+      <!-- Safety Positives -->
+      <div class="card">
+        <div class="card-header yellow">Safety<br><span style="font-size:0.75rem;font-weight:600;">What Safety Positives Did We Have Last Shift?</span></div>
+        <div class="card-body" id="positives"></div>
+        <button class="add-btn" onclick="addItem('positives')">+ Add Item</button>
+      </div>
+
+      <!-- Calendar -->
+      <div class="card">
+        <div class="card-header blue" style="display:flex;justify-content:space-between;align-items:center;">
+          <span id="calMonth">Month</span>
+          <span style="font-size:1.2rem;">📅</span>
+        </div>
+        <div class="card-body">
+          <div class="calendar-grid" id="calendar"></div>
+        </div>
+      </div>
+
+      <!-- Celebrating Success -->
+      <div class="card">
+        <div class="card-header yellow">Celebrating Success<br><span style="font-size:0.75rem;font-weight:600;">Nominate Who Went Above and Beyond and Why</span></div>
+        <div class="card-body" id="successes"></div>
+        <button class="add-btn" onclick="addItem('successes')">+ Add Item</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tasks Table -->
+  <div class="table-section">
+    <div class="table-header-bar">
+      <h2>Tasks for Upcoming Shift</h2>
+    </div>
+    <div class="table-headers">
+      <div>Team No.</div>
+      <div>Asset Location</div>
+      <div>Task</div>
+      <div>Hazards & Controls</div>
+    </div>
+    <div class="table-headers mobile">Tasks for Upcoming Shift</div>
+    <div id="tasksContainer"></div>
+    <button class="add-row-btn" onclick="addTaskRow()">
+      <span style="font-size:1.2rem;">+</span> Add New Task Row
+    </button>
+  </div>
+
+  <!-- Bottom Section -->
+  <div class="bottom-grid">
+    <!-- Communication -->
+    <div class="dark-card">
+      <h3><span style="font-size:1.3rem;">📻</span> Communication</h3>
+      <div class="comm-row">
+        <span class="comm-label">Shut Radio Channel:</span>
+        <input class="comm-input" type="text" value="Plant #1" id="comm-shut">
+      </div>
+      <div class="comm-row">
+        <span class="comm-label">Emergency Radio:</span>
+        <input class="comm-input" type="text" placeholder="..." id="comm-emer-radio">
+      </div>
+      <div class="comm-row">
+        <span class="comm-label">Emergency Mobile:</span>
+        <input class="comm-input" type="text" placeholder="..." id="comm-emer-mobile">
+      </div>
+      <div class="comm-row">
+        <span class="comm-label">D/S Supervisor:</span>
+        <input class="comm-input" type="text" value="Sam: 0429 888 257" id="comm-ds">
+      </div>
+      <div class="comm-row">
+        <span class="comm-label">N/S Supervisor:</span>
+        <input class="comm-input" type="text" value="Naz: 0409 421 434" id="comm-ns">
+      </div>
+    </div>
+
+    <!-- Weather -->
+    <div class="dark-card">
+      <h3><span style="font-size:1.3rem;">🌤️</span> Weather Forecast</h3>
+      <div class="weather-fetch">
+        <input type="text" id="weatherLoc" value="Sydney" placeholder="Location...">
+        <button onclick="fetchWeather()" id="weatherBtn">Fetch</button>
+        <button onclick="getMyLocation()" class="secondary" id="locBtn">📍 My Location</button>
+      </div>
+      <div class="loc-status" id="locStatus"></div>
+      <div class="weather-grid">
+        <div class="weather-item">
+          <div class="weather-icon">🌡️</div>
+          <div class="weather-value" id="w-temp">20°</div>
+          <div class="weather-label">Today's Temp</div>
+        </div>
+        <div class="weather-item">
+          <div class="weather-icon">💨</div>
+          <div class="weather-value" id="w-wind">20</div>
+          <div class="weather-label">kph Wind</div>
+        </div>
+        <div class="weather-item">
+          <div class="weather-icon">🌧️</div>
+          <div class="weather-value" id="w-rain">Nil</div>
+          <div class="weather-label">Rain % / MM</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Focus + Footer -->
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div class="focus-card">
+        <h3>Daily Safety Focus:</h3>
+        <input class="focus-input" type="text" value="Limiting voids" id="dailyFocus">
+      </div>
+      <div class="footer-card">
+        <h3><span style="font-size:1.5rem;">🛡️</span> Geared For Safety</h3>
+        <p>• Sign onto JHAs & SWIs</p>
+        <p>• Complete your Take 5s & Pre-starts</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ========== DATA ==========
+let taskIdCounter = 4;
+let groupIdCounter = 4;
+
+let tasks = [
+  {
+    id: 1,
+    teamNo: 'Josh\nMau',
+    assetLocation: 'Train 1',
+    task: 'Panels',
+    hazardGroups: [
+      { id: 1, hazards: ['Confined space', 'Creating voids'], controls: ['Permit, spotter, gas monitor', 'Remove 1 panel at a time'] }
+    ]
+  },
+  {
+    id: 2,
+    teamNo: 'Mika\nSteff',
+    assetLocation: 'Marva',
+    task: 'Belt Scrapers',
+    hazardGroups: [
+      { id: 2, hazards: ['Manual handling', 'Pinch points', 'Noise'], controls: ['Correct lifting technique', 'Correct tooling', 'Remain out of LOF'] }
+    ]
+  },
+  {
+    id: 3,
+    teamNo: 'Bryce\nRhys',
+    assetLocation: 'Cb',
+    task: 'Skirts',
+    hazardGroups: [
+      { id: 3, hazards: ['Slips/trips, falls', 'Poor lighting', 'Crane lifts', 'Hand/finger injuries'], controls: ['Hearing protection', 'Housekeeping', 'Extra lighting', 'Pre-starts, VOE'] }
+    ]
+  }
+];
+
+let lists = {
+  negatives: ['Hang-ups in chute above', 'Screen on B-Train'],
+  positives: ['Stopped the job !!!'],
+  successes: ['Steff identified the hang-up hazard', 'Josh & Bryce - improvising plates']
+};
+
+// ========== GEOLOCATION ==========
+function getMyLocation() {
+  const status = document.getElementById('locStatus');
+  const btn = document.getElementById('locBtn');
+
+  if (!navigator.geolocation) {
+    status.textContent = '❌ Geolocation not supported by this browser.';
+    status.className = 'loc-status error';
+    return;
+  }
+
+  status.textContent = '📡 Detecting your location...';
+  status.className = 'loc-status';
+  btn.disabled = true;
+
+  navigator.geolocation.getCurrentPosition(
+    async (position) => {
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+
+      try {
+        // Reverse geocode to get city name
+        const geoRes = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
+        const geoData = await geoRes.json();
+        const city = geoData.city || geoData.locality || 'Your Location';
+
+        document.getElementById('weatherLoc').value = city;
+        status.textContent = `✅ Located: ${city} (${lat.toFixed(2)}, ${lon.toFixed(2)})`;
+        status.className = 'loc-status success';
+
+        // Auto-fetch weather
+        await fetchWeatherFromCoords(lat, lon);
+      } catch (err) {
+        status.textContent = `✅ Located (${lat.toFixed(2)}, ${lon.toFixed(2)}) — fetching weather...`;
+        status.className = 'loc-status success';
+        await fetchWeatherFromCoords(lat, lon);
+      }
+      btn.disabled = false;
+    },
+    (error) => {
+      btn.disabled = false;
+      status.className = 'loc-status error';
+      switch(error.code) {
+        case error.PERMISSION_DENIED:
+          status.textContent = '❌ Location permission denied. Please allow location access in your browser settings.';
+          break;
+        case error.POSITION_UNAVAILABLE:
+          status.textContent = '❌ Location information unavailable.';
+          break;
+        case error.TIMEOUT:
+          status.textContent = '❌ Location request timed out.';
+          break;
+        default:
+          status.textContent = '❌ An unknown error occurred.';
+      }
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  );
+}
+
+async function fetchWeatherFromCoords(lat, lon) {
+  const btn = document.getElementById('weatherBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading"></span>';
+
+  try {
+    const weatherRes = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=precipitation_sum&timezone=auto`
+    );
+    const data = await weatherRes.json();
+
+    document.getElementById('w-temp').textContent = Math.round(data.current_weather.temperature) + '°';
+    document.getElementById('w-wind').textContent = Math.round(data.current_weather.windspeed);
+    const rain = data.daily?.precipitation_sum?.[0];
+    document.getElementById('w-rain').textContent = (rain > 0 ? rain + 'mm' : 'Nil');
+  } catch (err) {
+    console.error(err);
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Fetch';
+}
+
+// ========== RENDER LISTS ==========
+function renderList(key) {
+  const container = document.getElementById(key);
+  container.innerHTML = '';
+  lists[key].forEach((item, idx) => {
+    const div = document.createElement('div');
+    div.className = 'list-item';
+    const icon = key === 'negatives' ? '⚠️' : key === 'positives' ? '✅' : '🏆';
+    div.innerHTML = `
+      <span class="icon">${icon}</span>
+      <input class="editable" type="text" value="${item}" onchange="updateList('${key}', ${idx}, this.value)" placeholder="Enter item...">
+    `;
+    container.appendChild(div);
+  });
+}
+
+function updateList(key, idx, val) {
+  lists[key][idx] = val;
+}
+
+function addItem(key) {
+  lists[key].push('');
+  renderList(key);
+}
+
+// ========== CALENDAR ==========
+function renderCalendar() {
+  const now = new Date();
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('calMonth').textContent = monthNames[now.getMonth()] + ' ' + now.getFullYear();
+
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
+  const today = now.getDate();
+
+  const grid = document.getElementById('calendar');
+  grid.innerHTML = '';
+
+  ['S','M','T','W','T','F','S'].forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'cal-header';
+    el.textContent = d;
+    grid.appendChild(el);
+  });
+
+  for (let i = 0; i < firstDay; i++) {
+    grid.appendChild(document.createElement('div'));
+  }
+
+  for (let i = 1; i <= daysInMonth; i++) {
+    const el = document.createElement('div');
+    el.className = 'cal-day' + (i === today ? ' today' : '');
+    el.textContent = i;
+    grid.appendChild(el);
+  }
+}
+
+// ========== TASKS ==========
+function renderTasks() {
+  const container = document.getElementById('tasksContainer');
+  container.innerHTML = '';
+
+  tasks.forEach(task => {
+    const row = document.createElement('div');
+    row.className = 'task-row animate-in';
+
+    let hazardGroupsHtml = '<div class="hazard-groups">';
+    task.hazardGroups.forEach((group, gIdx) => {
+      hazardGroupsHtml += `
+        <div class="hazard-group">
+          <button class="delete-group" onclick="deleteHazardGroup(${task.id}, ${gIdx})">×</button>
+          <div class="group-section-title hazards">⚠️ Hazards</div>
+          ${group.hazards.map((h, hIdx) => `
+            <div style="display:flex;align-items:center;gap:4px;margin-bottom:4px;">
+              <input class="editable" style="color:#dc2626;font-weight:600;" type="text" value="${h}" onchange="updateHazard(${task.id}, ${gIdx}, ${hIdx}, 'hazards', this.value)">
+              <span class="sub-delete" onclick="removeSubItem(${task.id}, ${gIdx}, ${hIdx}, 'hazards')">🗑️</span>
+            </div>
+          `).join('')}
+          <button class="sub-add-btn" onclick="addSubItem(${task.id}, ${gIdx}, 'hazards')">+ Add Hazard</button>
+
+          <div class="group-section-title controls">🛡️ Controls</div>
+          ${group.controls.map((c, cIdx) => `
+            <div style="display:flex;align-items:center;gap:4px;margin-bottom:4px;">
+              <input class="editable" style="color:#16a34a;" type="text" value="${c}" onchange="updateHazard(${task.id}, ${gIdx}, ${cIdx}, 'controls', this.value)">
+              <span class="sub-delete" onclick="removeSubItem(${task.id}, ${gIdx}, ${cIdx}, 'controls')">🗑️</span>
+            </div>
+          `).join('')}
+          <button class="sub-add-btn" onclick="addSubItem(${task.id}, ${gIdx}, 'controls')">+ Add Control</button>
+        </div>
+      `;
+    });
+    hazardGroupsHtml += `
+      <button class="add-group-btn" onclick="addHazardGroup(${task.id})">
+        <span style="font-size:1.2rem;">+</span> Add Group of Hazards & Controls
+      </button>
+    </div>`;
+
+    row.innerHTML = `
+      <div class="col" data-label="Team No.">
+        <textarea class="editable" rows="2" onchange="updateTask(${task.id}, 'teamNo', this.value)" style="font-weight:800;color:#1e293b;resize:none;">${task.teamNo.replace(/\n/g, '
+')}</textarea>
+      </div>
+      <div class="col" data-label="Asset Location">
+        <input class="editable" type="text" value="${task.assetLocation}" onchange="updateTask(${task.id}, 'assetLocation', this.value)">
+      </div>
+      <div class="col" data-label="Task">
+        <input class="editable" type="text" value="${task.task}" onchange="updateTask(${task.id}, 'task', this.value)" style="font-weight:600;">
+      </div>
+      <div class="col" data-label="Hazards & Controls">
+        ${hazardGroupsHtml}
+        <button onclick="deleteTaskRow(${task.id})" style="margin-top:8px;font-size:0.75rem;color:#ef4444;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;">
+          🗑️ Delete Row
+        </button>
+      </div>
+    `;
+
+    container.appendChild(row);
+  });
+}
+
+function updateTask(id, field, val) {
+  const task = tasks.find(t => t.id === id);
+  if (task) task[field] = val;
+}
+
+function updateHazard(taskId, groupIdx, itemIdx, type, val) {
+  const task = tasks.find(t => t.id === taskId);
+  if (task) task.hazardGroups[groupIdx][type][itemIdx] = val;
+}
+
+function addSubItem(taskId, groupIdx, type) {
+  const task = tasks.find(t => t.id === taskId);
+  if (task) task.hazardGroups[groupIdx][type].push('');
+  renderTasks();
+}
+
+function removeSubItem(taskId, groupIdx, itemIdx, type) {
+  const task = tasks.find(t => t.id === taskId);
+  if (task) {
+    task.hazardGroups[groupIdx][type].splice(itemIdx, 1);
+    if (task.hazardGroups[groupIdx][type].length === 0) task.hazardGroups[groupIdx][type] = [''];
+  }
+  renderTasks();
+}
+
+function addHazardGroup(taskId) {
+  const task = tasks.find(t => t.id === taskId);
+  if (task) {
+    task.hazardGroups.push({ id: groupIdCounter++, hazards: [''], controls: [''] });
+  }
+  renderTasks();
+}
+
+function deleteHazardGroup(taskId, groupIdx) {
+  const task = tasks.find(t => t.id === taskId);
+  if (task) {
+    task.hazardGroups.splice(groupIdx, 1);
+    if (task.hazardGroups.length === 0) {
+      task.hazardGroups.push({ id: groupIdCounter++, hazards: [''], controls: [''] });
+    }
+  }
+  renderTasks();
+}
+
+function addTaskRow() {
+  tasks.push({
+    id: taskIdCounter++,
+    teamNo: '',
+    assetLocation: '',
+    task: '',
+    hazardGroups: [{ id: groupIdCounter++, hazards: [''], controls: [''] }]
+  });
+  renderTasks();
+}
+
+function deleteTaskRow(id) {
+  tasks = tasks.filter(t => t.id !== id);
+  renderTasks();
+}
+
+// ========== WEATHER ==========
+async function fetchWeather() {
+  const btn = document.getElementById('weatherBtn');
+  const loc = document.getElementById('weatherLoc').value;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading"></span>';
+
+  try {
+    const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(loc)}&count=1`);
+    const geoData = await geoRes.json();
+
+    if (!geoData.results?.[0]) {
+      alert('Location not found');
+      btn.disabled = false;
+      btn.textContent = 'Fetch';
+      return;
+    }
+
+    const { latitude, longitude } = geoData.results[0];
+    await fetchWeatherFromCoords(latitude, longitude);
+  } catch (err) {
+    console.error(err);
+    alert('Weather fetch failed. Check connection or enter manually.');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Fetch';
+}
+
+// ========== INIT ==========
+renderList('negatives');
+renderList('positives');
+renderList('successes');
+renderCalendar();
+renderTasks();
+</script>
+
+</body>
+</html>
