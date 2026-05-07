@@ -1,211 +1,161 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MADER Prestart Board | GPS Sync</title>
-  <style>
-    :root {
-      --mader-yellow: #fbbf24;
-      --mader-dark: #1e293b;
-      --mader-accent: #f59e0b;
-      --border: #e2e8f0;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MADER Prestart Board</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #f1f5f9; min-height: 100vh; }
+  .container { max-width: 1400px; margin: 0 auto; padding: 16px; }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
-    body { background: #f1f5f9; min-height: 100vh; padding-bottom: 40px; }
-    
-    .container { max-width: 1400px; margin: 0 auto; padding: 16px; }
+  .header { background: linear-gradient(135deg, #fbbf24, #f59e0b); border-radius: 16px 16px 0 0; padding: 24px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+  .header h1 { font-size: 2.2rem; font-weight: 900; color: #1e293b; text-transform: uppercase; letter-spacing: -0.5px; }
+  
+  .site-selector { margin-top: 15px; display: flex; justify-content: center; gap: 10px; align-items: center; }
+  .site-input { background: rgba(255,255,255,0.2); border: 2px solid #1e293b; padding: 8px 15px; border-radius: 8px; font-weight: 800; color: #1e293b; text-transform: uppercase; width: 300px; text-align: center; }
 
-    /* Header */
-    .header { background: linear-gradient(135deg, var(--mader-yellow), var(--mader-accent)); border-radius: 16px 16px 0 0; padding: 24px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-    .header h1 { font-size: 2.2rem; font-weight: 900; color: #1e293b; text-transform: uppercase; letter-spacing: -0.5px; }
+  .dark-section { background: #1e293b; padding: 20px; border-radius: 0 0 16px 16px; margin-bottom: 24px; }
+  .top-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
 
-    .dark-section { background: var(--mader-dark); padding: 20px; border-radius: 0 0 16px 16px; margin-bottom: 24px; }
-    .top-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+  .card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; }
+  .card-header { padding: 12px 16px; font-weight: 800; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  .card-header.yellow { background: #fbbf24; color: #1e293b; }
+  .card-header.blue { background: #3b82f6; color: white; }
+  .card-body { padding: 12px; }
 
-    /* Cards */
-    .card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; }
-    .card-header { padding: 12px 16px; font-weight: 800; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; background: var(--mader-yellow); color: #1e293b; }
-    .card-body { padding: 12px; }
+  .editable { width: 100%; border: none; border-bottom: 2px solid transparent; padding: 6px 4px; font-size: 0.9rem; background: transparent; transition: all 0.2s; color: #334155; }
+  .editable:focus { outline: none; border-bottom-color: #fbbf24; background: #fffbeb; }
 
-    .editable { width: 100%; border: none; border-bottom: 2px solid transparent; padding: 6px 4px; font-size: 0.9rem; background: transparent; transition: all 0.2s; color: #334155; }
-    .editable:focus { outline: none; border-bottom-color: var(--mader-yellow); background: #fffbeb; }
+  .table-section { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 24px; }
+  .table-header-bar { background: #1e293b; padding: 16px; text-align: center; }
+  .table-header-bar h2 { color: white; font-size: 1.2rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
 
-    /* Tasks Table */
-    .table-section { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 24px; }
-    .table-header-bar { background: var(--mader-dark); padding: 16px; text-align: center; color: white; }
-    table { width: 100%; border-collapse: collapse; }
-    th { background: var(--mader-yellow); padding: 12px; text-align: left; font-size: 0.75rem; text-transform: uppercase; color: #1e293b; }
-    td { padding: 12px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+  .table-headers { display: grid; grid-template-columns: 80px 1fr 1fr 3fr; gap: 12px; padding: 12px 16px; background: #fbbf24; font-weight: 800; font-size: 0.75rem; text-transform: uppercase; color: #1e293b; }
+  .task-row { display: grid; grid-template-columns: 80px 1fr 1fr 3fr; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #e2e8f0; align-items: start; }
 
-    /* Bottom Grid */
-    .bottom-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
-    .dark-card { background: var(--mader-dark); border-radius: 12px; padding: 20px; color: white; }
-    .comm-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #334155; }
-    .comm-label { font-size: 0.85rem; color: #94a3b8; }
-    .comm-input { background: transparent; border: none; border-bottom: 1px solid #475569; color: var(--mader-yellow); text-align: right; width: 150px; font-weight: 600; }
+  .hazard-group { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; margin-bottom: 10px; }
+  .bottom-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px; }
 
-    /* Weather Specifics */
-    .weather-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
-    .weather-item { background: #334155; border-radius: 10px; padding: 12px; text-align: center; }
-    .weather-val { font-size: 1.3rem; font-weight: 800; color: white; display: block; }
-    .weather-lab { font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; }
-    .gps-btn { background: var(--mader-yellow); border: none; padding: 8px 12px; border-radius: 6px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 10px; }
+  .dark-card { background: #1e293b; border-radius: 12px; padding: 20px; color: white; }
+  .comm-input { background: transparent; border: none; border-bottom: 1px solid #475569; color: #fbbf24; font-weight: 600; text-align: right; width: 140px; }
 
-    .btn-add { width: 100%; padding: 10px; background: #f8fafc; border: 1px dashed #cbd5e1; color: #64748b; cursor: pointer; font-weight: 600; border-radius: 8px; margin-top: 8px; }
+  .action-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; padding: 15px; display: flex; justify-content: center; gap: 20px; box-shadow: 0 -4px 15px rgba(0,0,0,0.3); z-index: 1000; }
+  .btn-action { padding: 10px 25px; border-radius: 8px; border: none; font-weight: 800; cursor: pointer; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
+  .btn-pdf { background: #ef4444; color: white; }
+  .btn-email { background: #3b82f6; color: white; }
 
-    @media (max-width: 768px) {
-      .top-grid, .bottom-grid { grid-template-columns: 1fr; }
-      th { display: none; }
-      td { display: block; border: none; }
-      td::before { content: attr(data-label); font-weight: 800; font-size: 0.7rem; color: #94a3b8; display: block; }
-    }
-  </style>
+  @media print { .action-bar, .add-btn, .add-row-btn, .weather-fetch { display: none !important; } }
+</style>
 </head>
 <body>
 
-<div class="container">
-  <div class="header">
-    <h1>MADER Prestart Board</h1>
-  </div>
+  <div id="capture-area">
+    <div class="header">
+      <h1>MADER Prestart Board</h1>
+      <div class="site-selector">
+        <span style="font-weight: 900;">SITE:</span>
+        <input type="text" class="site-input" id="siteName" placeholder="Enter Site Name...">
+      </div>
+    </div>
 
-  <div class="dark-section">
-    <div class="top-grid">
-      <div class="card">
-        <div class="card-header">⚠️ Safety Negatives</div>
-        <div class="card-body" id="neg-list">
-          <input class="editable" value="Hang-ups in chute above">
-          <input class="editable" value="Screen on B-Train">
+    <div class="dark-section">
+      <div class="top-grid">
+        <div class="card"><div class="card-header yellow">Safety Negatives</div><div class="card-body" id="negatives"></div><button class="add-btn" onclick="addItem('negatives')">+ Item</button></div>
+        <div class="card"><div class="card-header yellow">Safety Positives</div><div class="card-body" id="positives"></div><button class="add-btn" onclick="addItem('positives')">+ Item</button></div>
+        <div class="card"><div class="card-header blue" id="calMonth">Month</div><div class="card-body"><div id="calendar" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;font-size:0.8rem;text-align:center;"></div></div></div>
+        <div class="card"><div class="card-header yellow">Successes</div><div class="card-body" id="successes"></div><button class="add-btn" onclick="addItem('successes')">+ Item</button></div>
+      </div>
+    </div>
+
+    <div class="table-section">
+      <div class="table-header-bar"><h2>Shift Tasks</h2></div>
+      <div class="table-headers"><div>Team</div><div>Location</div><div>Task</div><div>Hazards & Controls</div></div>
+      <div id="tasksContainer"></div>
+      <button class="add-row-btn" style="width:100%;padding:15px;" onclick="addTaskRow()">+ New Task</button>
+    </div>
+
+    <div class="container">
+      <div class="bottom-grid">
+        <div class="dark-card">
+          <h3>📻 Comms</h3>
+          <div class="comm-row"><span>Channel:</span><input class="comm-input" id="comm-shut" value="Plant #1"></div>
+          <div class="comm-row"><span>Supervisor:</span><input class="comm-input" id="comm-ds" value="Sam: 0429 888 257"></div>
         </div>
-        <button class="btn-add" onclick="addItem('neg-list')">+ Add Item</button>
-      </div>
-
-      <div class="card">
-        <div class="card-header">✅ Safety Positives</div>
-        <div class="card-body" id="pos-list">
-          <input class="editable" value="Stopped the job !!!">
+        <div class="dark-card">
+          <h3>🌤️ Weather</h3>
+          <input type="text" id="weatherLoc" value="Sydney" style="background:transparent;color:white;border:1px solid #475569;padding:5px;width:100%;">
+          <div style="display:flex;justify-content:space-around;margin-top:10px;">
+             <div id="w-temp">--°</div><div id="w-wind">-- kph</div>
+          </div>
         </div>
-        <button class="btn-add" onclick="addItem('pos-list')">+ Add Item</button>
-      </div>
-
-      <div class="card">
-        <div class="card-header">🏆 Celebrating Success</div>
-        <div class="card-body" id="success-list">
-          <input class="editable" value="Steff identified hang-up hazard">
+        <div class="dark-card" style="background:#fbbf24;color:#1e293b;">
+          <h3>🛡️ Focus</h3>
+          <textarea id="dailyFocus" style="width:100%;font-weight:900;font-size:1.2rem;background:transparent;border:none;">Limiting Voids</textarea>
         </div>
-        <button class="btn-add" onclick="addItem('success-list')">+ Add Item</button>
       </div>
     </div>
   </div>
 
-  <div class="table-section">
-    <div class="table-header-bar"><h2>Tasks for Upcoming Shift</h2></div>
-    <table>
-      <thead>
-        <tr>
-          <th>Team No.</th>
-          <th>Asset Location</th>
-          <th>Task</th>
-          <th>Hazards & Controls</th>
-        </tr>
-      </thead>
-      <tbody id="taskBody">
-        <tr>
-          <td data-label="Team"><textarea class="editable">Josh / Mau</textarea></td>
-          <td data-label="Location"><textarea class="editable">Train 1</textarea></td>
-          <td data-label="Task"><textarea class="editable">Panels</textarea></td>
-          <td data-label="Hazards"><textarea class="editable" rows="3">Confined space / Permit, spotter</textarea></td>
-        </tr>
-      </tbody>
-    </table>
-    <button class="btn-add" style="border-radius: 0; border:none; border-top: 1px solid #eee;" onclick="addTaskRow()">+ Add Task Row</button>
+  <div class="action-bar">
+    <button class="btn-action btn-pdf" onclick="downloadPDF()">📄 Download PDF</button>
+    <button class="btn-action btn-email" onclick="sendEmail()">📧 Send via Email</button>
   </div>
-
-  <div class="bottom-grid">
-    <div class="dark-card">
-      <h3>📻 Communication</h3>
-      <div class="comm-row"><span class="comm-label">Shut Radio:</span><input class="comm-input" value="Plant #1"></div>
-      <div class="comm-row"><span class="comm-label">D/S Supervisor:</span><input class="comm-input" value="Sam: 0429 888 257"></div>
-      <div class="comm-row"><span class="comm-label">N/S Supervisor:</span><input class="comm-input" value="Naz: 0409 421 434"></div>
-    </div>
-
-    <div class="dark-card">
-      <h3>🌤️ Site Environment</h3>
-      <input id="weatherLoc" class="comm-input" style="text-align: left; width: 100%; border-bottom: 1px solid #475569; margin-top: 10px;" value="Detecting site...">
-      <div class="weather-grid">
-        <div class="weather-item"><span id="w-temp" class="weather-val">--°</span><span class="weather-lab">Temp</span></div>
-        <div class="weather-item"><span id="w-wind" class="weather-val">--</span><span class="weather-lab">kph Wind</span></div>
-        <div class="weather-item"><span id="w-rain" class="weather-val">Nil</span><span class="weather-lab">Rain</span></div>
-      </div>
-      <button class="gps-btn" onclick="syncGPS()">🔄 Sync GPS & Weather</button>
-    </div>
-
-    <div class="dark-card" style="background: var(--mader-yellow); color: #1e293b;">
-      <h3 style="color: #1e293b;">🛡️ Daily Safety Focus</h3>
-      <textarea class="editable" style="font-size: 1.5rem; font-weight: 900; height: 80px; color: #1e293b;">LIMITING VOIDS</textarea>
-    </div>
-  </div>
-</div>
 
 <script>
-  function addItem(id) {
-    const container = document.getElementById(id);
-    const input = document.createElement('input');
-    input.className = 'editable';
-    input.placeholder = 'New item...';
-    container.appendChild(input);
-  }
+let tasks = [{ id: 1, teamNo: 'Team A', assetLocation: 'Site 1', task: 'Inspection', hazardGroups: [{ hazards: ['Height'], controls: ['Harness'] }] }];
+let lists = { negatives: ['Chute blockage'], positives: ['Good cleanup'], successes: ['On time'] };
 
-  function addTaskRow() {
-    const tbody = document.getElementById('taskBody');
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td data-label="Team"><textarea class="editable"></textarea></td>
-      <td data-label="Location"><textarea class="editable"></textarea></td>
-      <td data-label="Task"><textarea class="editable"></textarea></td>
-      <td data-label="Hazards"><textarea class="editable" rows="3"></textarea></td>
-    `;
-    tbody.appendChild(row);
-  }
+function renderList(key) {
+  const container = document.getElementById(key);
+  container.innerHTML = '';
+  lists[key].forEach((item, idx) => {
+    container.innerHTML += `<div style="display:flex;gap:5px;margin-bottom:5px;"><span>•</span><input class="editable" value="${item}" onchange="lists['${key}'][${idx}]=this.value"></div>`;
+  });
+}
 
-  async function syncGPS() {
-    const locField = document.getElementById('weatherLoc');
-    locField.value = "🛰️ Accessing GPS...";
+function addItem(key) { lists[key].push(''); renderList(key); }
 
-    if (!navigator.geolocation) {
-      locField.value = "Geolocation Not Supported";
-      return;
-    }
+function renderTasks() {
+  const container = document.getElementById('tasksContainer');
+  container.innerHTML = '';
+  tasks.forEach(task => {
+    container.innerHTML += `<div class="task-row">
+      <textarea class="editable">${task.teamNo}</textarea>
+      <input class="editable" value="${task.assetLocation}">
+      <input class="editable" value="${task.task}">
+      <div class="hazard-group">${task.hazardGroups[0].hazards[0]} / ${task.hazardGroups[0].controls[0]}</div>
+    </div>`;
+  });
+}
 
-    navigator.geolocation.getCurrentPosition(async (pos) => {
-      const { latitude, longitude } = pos.coords;
-      
-      // Get location name
-      try {
-        const geo = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
-        const geoData = await geo.json();
-        locField.value = `📍 ${geoData.locality || geoData.city || 'Remote Site'}`;
-      } catch(e) { locField.value = `📍 Site (${latitude.toFixed(2)})`; }
+function addTaskRow() { tasks.push({ teamNo: '', assetLocation: '', task: '', hazardGroups: [{ hazards: [''], controls: [''] }] }); renderTasks(); }
 
-      // Get Weather
-      try {
-        const w = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&daily=precipitation_sum&timezone=auto`);
-        const wData = await w.json();
-        document.getElementById('w-temp').innerText = Math.round(wData.current_weather.temperature) + '°';
-        document.getElementById('w-wind').innerText = Math.round(wData.current_weather.windspeed);
-        const rain = wData.daily?.precipitation_sum?.[0];
-        document.getElementById('w-rain').innerText = (rain > 0 ? rain + 'mm' : 'Nil');
-      } catch(e) { console.error("Weather failed"); }
-      
-    }, () => {
-      locField.value = "⚠️ GPS Access Denied";
-    });
-  }
+async function downloadPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF('p', 'pt', 'a4');
+  const element = document.getElementById('capture-area');
+  
+  html2canvas(element, { scale: 2 }).then(canvas => {
+    const imgData = canvas.toDataURL('image/png');
+    const imgProps = doc.getImageProperties(imgData);
+    const pdfWidth = doc.internal.pageSize.getWidth();
+    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+    doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    doc.save(`Mader_Prestart_${document.getElementById('siteName').value || 'Report'}.pdf`);
+  });
+}
 
-  // Auto-run GPS on load
-  window.onload = syncGPS;
+function sendEmail() {
+  const site = document.getElementById('siteName').value;
+  const focus = document.getElementById('dailyFocus').value;
+  const body = `Mader Prestart - ${site}%0D%0ASafety Focus: ${focus}%0D%0A%0D%0APlease see attached PDF for full details.`;
+  window.location.href = `mailto:?subject=Prestart Board - ${site}&body=${body}`;
+}
+
+window.onload = () => { renderList('negatives'); renderList('positives'); renderList('successes'); renderTasks(); };
 </script>
-
 </body>
 </html>
