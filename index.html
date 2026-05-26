@@ -1,161 +1,1384 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MADER Prestart Board</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #f1f5f9; min-height: 100vh; }
-  .container { max-width: 1400px; margin: 0 auto; padding: 16px; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MADER | Digital Prestart Board</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap');
 
-  .header { background: linear-gradient(135deg, #fbbf24, #f59e0b); border-radius: 16px 16px 0 0; padding: 24px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-  .header h1 { font-size: 2.2rem; font-weight: 900; color: #1e293b; text-transform: uppercase; letter-spacing: -0.5px; }
-  
-  .site-selector { margin-top: 15px; display: flex; justify-content: center; gap: 10px; align-items: center; }
-  .site-input { background: rgba(255,255,255,0.2); border: 2px solid #1e293b; padding: 8px 15px; border-radius: 8px; font-weight: 800; color: #1e293b; text-transform: uppercase; width: 300px; text-align: center; }
+        :root {
+            --yellow: #fbbf24;
+            --yellow-dark: #d97706;
+            --navy: #0f1e35;
+            --navy-mid: #1e3a5f;
+            --navy-light: #2d4f78;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --warn: #f97316;
+            --border: #dde3ed;
+            --bg: #f0f4f8;
+        }
 
-  .dark-section { background: #1e293b; padding: 20px; border-radius: 0 0 16px 16px; margin-bottom: 24px; }
-  .top-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background: var(--bg); 
+            color: #1e293b; 
+            font-family: 'Barlow', sans-serif;
+            line-height: 1.4;
+        }
 
-  .card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; }
-  .card-header { padding: 12px 16px; font-weight: 800; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
-  .card-header.yellow { background: #fbbf24; color: #1e293b; }
-  .card-header.blue { background: #3b82f6; color: white; }
-  .card-body { padding: 12px; }
+        /* ── LAYOUT SHELL ── */
+        .app-shell {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
 
-  .editable { width: 100%; border: none; border-bottom: 2px solid transparent; padding: 6px 4px; font-size: 0.9rem; background: transparent; transition: all 0.2s; color: #334155; }
-  .editable:focus { outline: none; border-bottom-color: #fbbf24; background: #fffbeb; }
+        /* ── HEADER ── */
+        .header {
+            background: var(--navy);
+            border-bottom: 5px solid var(--yellow);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            height: 68px;
+            flex-shrink: 0;
+        }
+        .header-logo {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+        }
+        .header-logo .brand {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--yellow);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+        .header-logo .sub {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .header-meta {
+            text-align: right;
+        }
+        .header-meta .date {
+            color: #e2e8f0;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .header-meta .tagline {
+            color: var(--yellow);
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
 
-  .table-section { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 24px; }
-  .table-header-bar { background: #1e293b; padding: 16px; text-align: center; }
-  .table-header-bar h2 { color: white; font-size: 1.2rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+        /* ── BODY LAYOUT ── */
+        .body-layout {
+            display: flex;
+            flex: 1;
+            gap: 0;
+        }
 
-  .table-headers { display: grid; grid-template-columns: 80px 1fr 1fr 3fr; gap: 12px; padding: 12px 16px; background: #fbbf24; font-weight: 800; font-size: 0.75rem; text-transform: uppercase; color: #1e293b; }
-  .task-row { display: grid; grid-template-columns: 80px 1fr 1fr 3fr; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #e2e8f0; align-items: start; }
+        /* ── HAZARD LIBRARY PANEL ── */
+        .hazard-panel {
+            width: 280px;
+            flex-shrink: 0;
+            background: var(--navy);
+            border-right: 3px solid var(--yellow);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .panel-header {
+            background: var(--yellow);
+            padding: 10px 14px;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--navy);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .panel-tabs {
+            display: flex;
+            background: var(--navy-mid);
+        }
+        .panel-tab {
+            flex: 1;
+            padding: 8px;
+            text-align: center;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            color: #94a3b8;
+            border-bottom: 3px solid transparent;
+            transition: all 0.15s;
+        }
+        .panel-tab.active {
+            color: var(--yellow);
+            border-bottom-color: var(--yellow);
+            background: var(--navy-light);
+        }
 
-  .hazard-group { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; margin-bottom: 10px; }
-  .bottom-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .panel-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        .panel-scroll::-webkit-scrollbar { width: 4px; }
+        .panel-scroll::-webkit-scrollbar-track { background: var(--navy-mid); }
+        .panel-scroll::-webkit-scrollbar-thumb { background: var(--yellow); border-radius: 2px; }
 
-  .dark-card { background: #1e293b; border-radius: 12px; padding: 20px; color: white; }
-  .comm-input { background: transparent; border: none; border-bottom: 1px solid #475569; color: #fbbf24; font-weight: 600; text-align: right; width: 140px; }
+        .hazard-category {
+            margin-bottom: 10px;
+        }
+        .hazard-cat-title {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #64748b;
+            padding: 4px 2px;
+            margin-bottom: 4px;
+            border-bottom: 1px solid #1e3a5f;
+        }
 
-  .action-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; padding: 15px; display: flex; justify-content: center; gap: 20px; box-shadow: 0 -4px 15px rgba(0,0,0,0.3); z-index: 1000; }
-  .btn-action { padding: 10px 25px; border-radius: 8px; border: none; font-weight: 800; cursor: pointer; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
-  .btn-pdf { background: #ef4444; color: white; }
-  .btn-email { background: #3b82f6; color: white; }
+        .drag-chip {
+            background: var(--navy-light);
+            border: 1px solid #2d4f78;
+            border-left: 3px solid var(--yellow);
+            color: #e2e8f0;
+            font-size: 0.78rem;
+            padding: 6px 8px;
+            border-radius: 4px;
+            margin-bottom: 5px;
+            cursor: grab;
+            transition: all 0.15s;
+            user-select: none;
+        }
+        .drag-chip:hover {
+            background: #3d6491;
+            border-left-color: var(--yellow-dark);
+            transform: translateX(2px);
+        }
+        .drag-chip:active { cursor: grabbing; opacity: 0.7; }
+        .drag-chip.control-chip {
+            border-left-color: var(--success);
+        }
+        .drag-chip.dragging { opacity: 0.4; }
 
-  @media print { .action-bar, .add-btn, .add-row-btn, .weather-fetch { display: none !important; } }
-</style>
+        .panel-hint {
+            font-size: 0.7rem;
+            color: #475569;
+            text-align: center;
+            padding: 8px;
+            font-style: italic;
+        }
+
+        /* ── MAIN BOARD ── */
+        .board-main {
+            flex: 1;
+            padding: 16px;
+            overflow-x: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* ── TOP ROW CARDS ── */
+        .top-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 14px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .card-head {
+            background: var(--yellow);
+            padding: 8px 12px;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 800;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--navy);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .card-head.dark {
+            background: var(--navy);
+            color: white;
+        }
+        .card-body { padding: 10px; flex: 1; }
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 5px;
+            padding: 6px 8px;
+            margin-bottom: 6px;
+        }
+        .list-item input {
+            border: none;
+            background: transparent;
+            flex: 1;
+            font-size: 0.88rem;
+            color: #1e293b;
+            font-family: 'Barlow', sans-serif;
+        }
+        .list-item input:focus { outline: none; }
+        .btn-del {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 0 2px;
+            line-height: 1;
+            opacity: 0.6;
+            transition: opacity 0.15s;
+        }
+        .btn-del:hover { opacity: 1; }
+
+        .btn-add {
+            width: 100%;
+            background: #f1f5f9;
+            border: 1px dashed #cbd5e1;
+            padding: 6px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #64748b;
+            font-family: 'Barlow', sans-serif;
+            transition: all 0.15s;
+        }
+        .btn-add:hover { background: #e2e8f0; border-color: #94a3b8; }
+
+        /* ── TASK TABLE ── */
+        .task-section {
+            background: white;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            overflow: hidden;
+        }
+        .task-head {
+            background: var(--navy);
+            padding: 11px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .task-head span {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 1rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: white;
+        }
+        .btn-primary {
+            background: var(--yellow);
+            border: none;
+            padding: 7px 14px;
+            border-radius: 5px;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+            color: var(--navy);
+            transition: all 0.15s;
+        }
+        .btn-primary:hover { background: var(--yellow-dark); }
+
+        table { width: 100%; border-collapse: collapse; }
+        thead {
+            background: #f1f5f9;
+            border-bottom: 2px solid var(--yellow);
+        }
+        th {
+            padding: 9px 10px;
+            text-align: left;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #475569;
+        }
+        th.hazard-col { color: #b45309; }
+        th.control-col { color: #166534; }
+
+        td { 
+            padding: 6px 8px; 
+            border-bottom: 1px solid #e8edf3; 
+            vertical-align: top;
+        }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #fafbfc; }
+
+        .cell-ta {
+            width: 100%;
+            border: 1px solid transparent;
+            padding: 5px 6px;
+            resize: none;
+            font-size: 0.85rem;
+            background: transparent;
+            border-radius: 4px;
+            font-family: 'Barlow', sans-serif;
+            color: #1e293b;
+            min-height: 56px;
+            transition: all 0.15s;
+        }
+        .cell-ta:focus { 
+            border-color: var(--yellow); 
+            outline: none; 
+            background: white;
+            box-shadow: 0 0 0 2px rgba(251,191,36,0.15);
+        }
+
+        /* Drop zones */
+        .drop-zone {
+            min-height: 56px;
+            border: 1px dashed transparent;
+            border-radius: 4px;
+            transition: all 0.15s;
+            position: relative;
+        }
+        .drop-zone.hazard-drop { }
+        .drop-zone.control-drop { }
+        .drop-zone.drag-over { 
+            border-color: var(--yellow);
+            background: rgba(251,191,36,0.06);
+        }
+        .drop-zone.drag-over.control-drop {
+            border-color: var(--success);
+            background: rgba(34,197,94,0.06);
+        }
+        .drop-zone.drag-rejected {
+            border-color: var(--danger) !important;
+            background: rgba(239,68,68,0.06) !important;
+            cursor: not-allowed;
+        }
+        .drop-zone.drag-rejected::after {
+            content: "✕ Wrong column";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--danger);
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        @keyframes shake {
+            0%,100% { transform: translateX(0); }
+            20% { transform: translateX(-5px); }
+            40% { transform: translateX(5px); }
+            60% { transform: translateX(-4px); }
+            80% { transform: translateX(4px); }
+        }
+        .drop-zone.drop-blocked {
+            animation: shake 0.5s ease;
+            border-color: var(--danger) !important;
+            background: rgba(239,68,68,0.1) !important;
+        }
+        .drop-zone-hint {
+            font-size: 0.72rem;
+            color: #94a3b8;
+            text-align: center;
+            padding: 8px;
+            font-style: italic;
+            pointer-events: none;
+        }
+        .dropped-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #fef3c7;
+            border: 1px solid #fcd34d;
+            border-radius: 3px;
+            padding: 2px 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #92400e;
+            margin: 2px;
+        }
+        .dropped-tag.control-tag {
+            background: #dcfce7;
+            border-color: #86efac;
+            color: #166534;
+        }
+        .dropped-tag .rm {
+            cursor: pointer;
+            opacity: 0.6;
+            font-size: 0.8rem;
+            line-height: 1;
+        }
+        .dropped-tag .rm:hover { opacity: 1; }
+
+        /* ── BOTTOM ROW ── */
+        .bottom-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 14px;
+        }
+
+        .comm-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 7px;
+        }
+        .comm-label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            width: 130px;
+        }
+        .comm-input {
+            flex: 1;
+            background: #1e3a5f;
+            border: 1px solid #2d4f78;
+            border-radius: 4px;
+            padding: 5px 8px;
+            color: white;
+            font-size: 0.85rem;
+            font-family: 'Barlow', sans-serif;
+        }
+        .comm-input:focus { outline: none; border-color: var(--yellow); }
+
+        .weather-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .weather-stat {
+            background: #f1f5f9;
+            border-radius: 6px;
+            padding: 8px;
+            text-align: center;
+        }
+        .weather-stat small { font-size: 0.68rem; color: #64748b; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
+        .weather-val { font-family: 'Barlow Condensed', sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--navy); }
+
+        .weather-fetch-row { display: flex; gap: 6px; margin-bottom: 8px; }
+        .weather-fetch-row input {
+            flex: 1;
+            padding: 6px 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-family: 'Barlow', sans-serif;
+        }
+        .weather-fetch-row input:focus { outline: none; border-color: var(--yellow); }
+
+        .focus-card {
+            background: var(--navy);
+        }
+        .focus-ta {
+            width: 100%;
+            background: var(--yellow);
+            border: none;
+            padding: 14px;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 900;
+            text-align: center;
+            color: var(--navy);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            resize: none;
+            min-height: 90px;
+        }
+        .focus-ta:focus { outline: none; }
+        .focus-ta::placeholder { color: rgba(30,41,59,0.5); }
+
+        .sign-off {
+            background: var(--navy);
+            border-radius: 6px;
+            padding: 10px 14px;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 0.8rem;
+            color: #94a3b8;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-align: center;
+            margin-top: 4px;
+        }
+        .sign-off strong { color: var(--yellow); }
+
+
+        /* ── ACTION BAR ── */
+        .action-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--navy);
+            border-top: 3px solid var(--yellow);
+            z-index: 1000;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+        }
+        .action-bar-inner {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 10px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .action-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .action-bar-label {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #64748b;
+        }
+        .save-status {
+            font-size: 0.78rem;
+            color: var(--success);
+            font-weight: 600;
+        }
+        .action-bar-right {
+            display: flex;
+            gap: 10px;
+        }
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 9px 20px;
+            border-radius: 6px;
+            border: none;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .email-btn {
+            background: #1e3a5f;
+            border: 1px solid #2d4f78;
+            color: #e2e8f0;
+        }
+        .email-btn:hover { background: #2d4f78; transform: translateY(-1px); }
+        .pdf-btn {
+            background: var(--yellow);
+            color: var(--navy);
+        }
+        .pdf-btn:hover { background: var(--yellow-dark); transform: translateY(-1px); }
+        .action-btn:active { transform: translateY(0); }
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: #1e293b;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            opacity: 0;
+            transition: all 0.3s;
+            pointer-events: none;
+            white-space: nowrap;
+            border-left: 4px solid var(--yellow);
+            z-index: 2000;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        .toast.success { border-left-color: var(--success); }
+        .toast.error { border-left-color: var(--danger); }
+        body { padding-bottom: 64px; }
+        @media print {
+            .hazard-panel, .btn-primary, .btn-add, .btn-del, .weather-fetch-row { display: none !important; }
+            .body-layout { display: block; }
+            .board-main { padding: 8px; }
+        }
+    </style>
 </head>
 <body>
 
-  <div id="capture-area">
-    <div class="header">
-      <h1>MADER Prestart Board</h1>
-      <div class="site-selector">
-        <span style="font-weight: 900;">SITE:</span>
-        <input type="text" class="site-input" id="siteName" placeholder="Enter Site Name...">
-      </div>
-    </div>
-
-    <div class="dark-section">
-      <div class="top-grid">
-        <div class="card"><div class="card-header yellow">Safety Negatives</div><div class="card-body" id="negatives"></div><button class="add-btn" onclick="addItem('negatives')">+ Item</button></div>
-        <div class="card"><div class="card-header yellow">Safety Positives</div><div class="card-body" id="positives"></div><button class="add-btn" onclick="addItem('positives')">+ Item</button></div>
-        <div class="card"><div class="card-header blue" id="calMonth">Month</div><div class="card-body"><div id="calendar" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;font-size:0.8rem;text-align:center;"></div></div></div>
-        <div class="card"><div class="card-header yellow">Successes</div><div class="card-body" id="successes"></div><button class="add-btn" onclick="addItem('successes')">+ Item</button></div>
-      </div>
-    </div>
-
-    <div class="table-section">
-      <div class="table-header-bar"><h2>Shift Tasks</h2></div>
-      <div class="table-headers"><div>Team</div><div>Location</div><div>Task</div><div>Hazards & Controls</div></div>
-      <div id="tasksContainer"></div>
-      <button class="add-row-btn" style="width:100%;padding:15px;" onclick="addTaskRow()">+ New Task</button>
-    </div>
-
-    <div class="container">
-      <div class="bottom-grid">
-        <div class="dark-card">
-          <h3>📻 Comms</h3>
-          <div class="comm-row"><span>Channel:</span><input class="comm-input" id="comm-shut" value="Plant #1"></div>
-          <div class="comm-row"><span>Supervisor:</span><input class="comm-input" id="comm-ds" value="Sam: 0429 888 257"></div>
+<div class="app-shell">
+    <header class="header">
+        <div class="header-logo">
+            <span class="brand">MADER</span>
+            <span class="sub">Prestart Board</span>
         </div>
-        <div class="dark-card">
-          <h3>🌤️ Weather</h3>
-          <input type="text" id="weatherLoc" value="Sydney" style="background:transparent;color:white;border:1px solid #475569;padding:5px;width:100%;">
-          <div style="display:flex;justify-content:space-around;margin-top:10px;">
-             <div id="w-temp">--°</div><div id="w-wind">-- kph</div>
-          </div>
+        <div class="header-meta">
+            <div class="date" id="dateDisplay"></div>
+            <div class="tagline">⚙ Geared for Safety</div>
         </div>
-        <div class="dark-card" style="background:#fbbf24;color:#1e293b;">
-          <h3>🛡️ Focus</h3>
-          <textarea id="dailyFocus" style="width:100%;font-weight:900;font-size:1.2rem;background:transparent;border:none;">Limiting Voids</textarea>
-        </div>
-      </div>
-    </div>
-  </div>
+    </header>
 
-  <div class="action-bar">
-    <button class="btn-action btn-pdf" onclick="downloadPDF()">📄 Download PDF</button>
-    <button class="btn-action btn-email" onclick="sendEmail()">📧 Send via Email</button>
-  </div>
+    <div class="body-layout">
+
+        <!-- ── HAZARD LIBRARY PANEL ── -->
+        <aside class="hazard-panel">
+            <div class="panel-header">⚡ Hazard Library</div>
+            <div class="panel-tabs">
+                <div class="panel-tab active" onclick="switchTab('hazards', this)">Hazards</div>
+                <div class="panel-tab" onclick="switchTab('controls', this)">Controls</div>
+            </div>
+            <div class="panel-scroll" id="panelScroll">
+                <!-- filled by JS -->
+            </div>
+            <div class="panel-hint">Drag items into the table →</div>
+        </aside>
+
+        <!-- ── MAIN BOARD ── -->
+        <main class="board-main">
+
+            <!-- Top Cards -->
+            <div class="top-row">
+                <div class="card">
+                    <div class="card-head">⚠️ Safety Negatives <span style="font-size:0.7rem; opacity:0.7;">What wasn't safe last shift?</span></div>
+                    <div class="card-body">
+                        <div id="neg-list"></div>
+                        <button class="btn-add" onclick="addItem('neg-list','⚠️')">+ Add Negative</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-head">✅ Safety Positives <span style="font-size:0.7rem; opacity:0.7;">What went well?</span></div>
+                    <div class="card-body">
+                        <div id="pos-list"></div>
+                        <button class="btn-add" onclick="addItem('pos-list','✅')">+ Add Positive</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-head">🏆 Celebrating Success <span style="font-size:0.7rem; opacity:0.7;">Above & beyond</span></div>
+                    <div class="card-body">
+                        <div id="suc-list"></div>
+                        <button class="btn-add" onclick="addItem('suc-list','⭐')">+ Nominate Someone</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Task Table -->
+            <div class="task-section">
+                <div class="task-head">
+                    <span>Tasks for Upcoming Shift</span>
+                    <button class="btn-primary" onclick="addRow()">+ Add Task</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width:12%">Team No.</th>
+                            <th style="width:13%">Asset / Loc.</th>
+                            <th style="width:16%">Task</th>
+                            <th class="hazard-col" style="width:26%">⚠ Hazards</th>
+                            <th class="control-col" style="width:29%">🛡 Controls</th>
+                            <th style="width:4%"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="taskBody"></tbody>
+                </table>
+                <div class="sign-off">
+                    <strong>Reminder:</strong> Sign onto JHAs + SWIs · Complete your Take5s & Pre-starts
+                </div>
+            </div>
+
+            <!-- Bottom Row -->
+            <div class="bottom-row">
+                <!-- Communication -->
+                <div class="card">
+                    <div class="card-head dark">📻 Communication</div>
+                    <div class="card-body" style="background: var(--navy);">
+                        <div class="comm-row"><span class="comm-label">Shut Radio Ch.</span><input class="comm-input" value="Plant #1"></div>
+                        <div class="comm-row"><span class="comm-label">Emergency Radio</span><input class="comm-input" placeholder="Channel..."></div>
+                        <div class="comm-row"><span class="comm-label">Emergency Mobile</span><input class="comm-input" placeholder="Number..."></div>
+                        <div class="comm-row"><span class="comm-label">D/S Supervisor</span><input class="comm-input" value="Sam: 0429 888 257"></div>
+                        <div class="comm-row"><span class="comm-label">N/S Supervisor</span><input class="comm-input" value="Naz: 0409 421 434"></div>
+                    </div>
+                </div>
+
+                <!-- Weather -->
+                <div class="card">
+                    <div class="card-head">🌤 Weather Forecast</div>
+                    <div class="card-body">
+                        <div class="weather-fetch-row">
+                            <input id="cityInp" type="text" placeholder="Site / City..." value="Perth">
+                            <button class="btn-primary" onclick="getWeather()">Go</button>
+                        </div>
+                        <div class="weather-grid">
+                            <div class="weather-stat"><small>Temp</small><div class="weather-val" id="wTemp">20°C</div></div>
+                            <div class="weather-stat"><small>Wind</small><div class="weather-val" id="wWind">20kph</div></div>
+                            <div class="weather-stat"><small>Rain</small><div class="weather-val" id="wRain">Nil</div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Daily Focus -->
+                <div class="card focus-card">
+                    <div class="card-head" style="background:#334155; color:white;">🎯 Daily Safety Focus</div>
+                    <div class="card-body" style="padding:0;">
+                        <textarea class="focus-ta" placeholder="e.g. LIMITING VOIDS">LIMITING VOIDS</textarea>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<!-- ── ACTION BAR ── -->
+<div class="action-bar" id="actionBar">
+    <div class="action-bar-inner">
+        <div class="action-bar-left">
+            <span class="action-bar-label">📋 Board Actions</span>
+            <span class="save-status" id="saveStatus"></span>
+        </div>
+        <div class="action-bar-right">
+            <button class="action-btn email-btn" onclick="emailBoard()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
+                Email Summary
+            </button>
+            <button class="action-btn pdf-btn" onclick="savePDF()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>
+                Save PDF Report
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
 
 <script>
-let tasks = [{ id: 1, teamNo: 'Team A', assetLocation: 'Site 1', task: 'Inspection', hazardGroups: [{ hazards: ['Height'], controls: ['Harness'] }] }];
-let lists = { negatives: ['Chute blockage'], positives: ['Good cleanup'], successes: ['On time'] };
+// ── DATE ──
+document.getElementById('dateDisplay').textContent = 
+    new Date().toLocaleDateString('en-AU', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
 
-function renderList(key) {
-  const container = document.getElementById(key);
-  container.innerHTML = '';
-  lists[key].forEach((item, idx) => {
-    container.innerHTML += `<div style="display:flex;gap:5px;margin-bottom:5px;"><span>•</span><input class="editable" value="${item}" onchange="lists['${key}'][${idx}]=this.value"></div>`;
-  });
+// ── HAZARD/CONTROL LIBRARY DATA ──
+const library = {
+    hazards: [
+        { cat: 'Working at Height', items: ['Working at height >1.8m', 'Falling objects overhead', 'Unstable working platform', 'Unprotected open edges'] },
+        { cat: 'Confined Space', items: ['Confined space entry', 'Oxygen deficiency', 'Toxic gas / fumes', 'Limited egress'] },
+        { cat: 'Electrical', items: ['Energised equipment nearby', 'Overhead power lines', 'Water near electrical equipment', 'Arc flash risk'] },
+        { cat: 'Manual Handling', items: ['Manual handling – heavy load', 'Pinch points', 'Awkward postures / repetitive motion', 'Strain / sprain risk'] },
+        { cat: 'Mobile Plant', items: ['Moving plant / vehicles', 'Spotting required', 'Blind spots / limited visibility', 'Crush / struck-by risk'] },
+        { cat: 'Slips, Trips, Falls', items: ['Slippery surfaces', 'Poor housekeeping / clutter', 'Poor lighting', 'Uneven ground'] },
+        { cat: 'Hot Work / Fire', items: ['Hot work – welding / cutting', 'Flammable materials nearby', 'Heat stress / hot environment', 'Fire / explosion risk'] },
+        { cat: 'Voids & Ground', items: ['Creating voids in material', 'Ground instability', 'Subsidence risk', 'Hang-ups in chute / bin'] },
+        { cat: 'Lifting Operations', items: ['Crane lifts', 'Overhead rigging', 'Load swing / unstable load', 'Dropped load risk'] },
+        { cat: 'Noise & Vibration', items: ['High noise environment (>85dB)', 'Hand-arm vibration', 'Whole-body vibration'] },
+        { cat: 'Hazardous Substances', items: ['Chemical exposure', 'Dust inhalation', 'Silica / asbestos risk', 'Skin contact with chemicals'] },
+        { cat: 'Other', items: ['SIMOPS – simultaneous operations', 'Night shift / fatigue', 'Lone worker', 'Weather / lightning risk'] },
+    ],
+    controls: [
+        { cat: 'Permits & Docs', items: ['Permit to work required', 'JHA completed & signed', 'SWI reviewed', 'Take5 completed', 'Gas test / atmospheric monitoring'] },
+        { cat: 'PPE', items: ['Hard hat worn', 'Safety glasses / face shield', 'Hi-vis vest worn', 'Gloves worn', 'Steel-cap boots', 'Hearing protection', 'Full-body harness & lanyard', 'Respiratory protection (P2 mask)'] },
+        { cat: 'Isolation & Barricading', items: ['LOTO applied – equipment isolated', 'Barricades & tags in place', 'Exclusion zone established', 'Spotter positioned'] },
+        { cat: 'Plant & Equipment', items: ['Pre-start completed', 'Correct tooling selected', 'Equipment within LOF / serviced', 'Fire extinguisher checked & present', 'Charged hose available'] },
+        { cat: 'Procedures', items: ['Correct lifting technique', 'Two-person lift required', 'Remove one panel at a time', 'Positive communications maintained', 'VOC confirmed'] },
+        { cat: 'Training & Supervision', items: ['Competency confirmed', 'Supervisor sign-off required', 'Task observation planned', 'Emergency contact confirmed'] },
+        { cat: 'Environmental', items: ['Housekeeping maintained', 'Spill kit available', 'Dust suppression applied', 'Extra lighting deployed'] },
+    ]
+};
+
+let currentTab = 'hazards';
+
+function switchTab(tab, el) {
+    currentTab = tab;
+    document.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    renderPanel();
 }
 
-function addItem(key) { lists[key].push(''); renderList(key); }
-
-function renderTasks() {
-  const container = document.getElementById('tasksContainer');
-  container.innerHTML = '';
-  tasks.forEach(task => {
-    container.innerHTML += `<div class="task-row">
-      <textarea class="editable">${task.teamNo}</textarea>
-      <input class="editable" value="${task.assetLocation}">
-      <input class="editable" value="${task.task}">
-      <div class="hazard-group">${task.hazardGroups[0].hazards[0]} / ${task.hazardGroups[0].controls[0]}</div>
-    </div>`;
-  });
+function renderPanel() {
+    const scroll = document.getElementById('panelScroll');
+    scroll.innerHTML = '';
+    const data = library[currentTab];
+    data.forEach(cat => {
+        const section = document.createElement('div');
+        section.className = 'hazard-category';
+        section.innerHTML = `<div class="hazard-cat-title">${cat.cat}</div>`;
+        cat.items.forEach(item => {
+            const chip = document.createElement('div');
+            chip.className = 'drag-chip' + (currentTab === 'controls' ? ' control-chip' : '');
+            chip.textContent = item;
+            chip.draggable = true;
+            chip.dataset.text = item;
+            chip.dataset.type = currentTab === 'controls' ? 'control' : 'hazard';
+            chip.addEventListener('dragstart', e => {
+                e.dataTransfer.setData('text/plain', item);
+                e.dataTransfer.setData('chip-type', chip.dataset.type);
+                chip.classList.add('dragging');
+                activeDragType = chip.dataset.type;
+            });
+            chip.addEventListener('dragend', () => {
+                chip.classList.remove('dragging');
+                activeDragType = null;
+                document.querySelectorAll('.drag-rejected').forEach(el => el.classList.remove('drag-rejected'));
+            });
+            section.appendChild(chip);
+        });
+        scroll.appendChild(section);
+    });
 }
 
-function addTaskRow() { tasks.push({ teamNo: '', assetLocation: '', task: '', hazardGroups: [{ hazards: [''], controls: [''] }] }); renderTasks(); }
+// ── TASK TABLE ──
+let rowId = 0;
 
-async function downloadPDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF('p', 'pt', 'a4');
-  const element = document.getElementById('capture-area');
-  
-  html2canvas(element, { scale: 2 }).then(canvas => {
-    const imgData = canvas.toDataURL('image/png');
-    const imgProps = doc.getImageProperties(imgData);
-    const pdfWidth = doc.internal.pageSize.getWidth();
-    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-    doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-    doc.save(`Mader_Prestart_${document.getElementById('siteName').value || 'Report'}.pdf`);
-  });
+function addRow(data = {}) {
+    const tbody = document.getElementById('taskBody');
+    const id = rowId++;
+    const tr = document.createElement('tr');
+    tr.dataset.rowId = id;
+    tr.innerHTML = `
+        <td><textarea class="cell-ta" placeholder="Names / Team...">${data.team||''}</textarea></td>
+        <td><textarea class="cell-ta" placeholder="Asset / Location...">${data.loc||''}</textarea></td>
+        <td><textarea class="cell-ta" placeholder="Work to be done...">${data.task||''}</textarea></td>
+        <td>
+            <div class="drop-zone hazard-drop" id="haz-${id}" ondragover="onDragOver(event,'hazard')" ondragleave="onDragLeave(event)" ondrop="onDrop(event,'hazard','haz-${id}')">
+                <div class="cell-ta" contenteditable="true" style="min-height:36px; border:none; background:transparent;" data-ph="Identify hazards..." onfocus="this.dataset.focused='1'" onblur="this.dataset.focused=''">${data.hazards||''}</div>
+                <div id="htags-${id}" class="tags-area"></div>
+                <div class="drop-zone-hint">← Drag from panel</div>
+            </div>
+        </td>
+        <td>
+            <div class="drop-zone control-drop" id="ctrl-${id}" ondragover="onDragOver(event,'control')" ondragleave="onDragLeave(event)" ondrop="onDrop(event,'control','ctrl-${id}')">
+                <div class="cell-ta" contenteditable="true" style="min-height:36px; border:none; background:transparent;" data-ph="Controls for hazards above..." onfocus="this.dataset.focused='1'" onblur="this.dataset.focused=''">${data.controls||''}</div>
+                <div id="ctags-${id}" class="tags-area"></div>
+                <div class="drop-zone-hint">← Drag from panel</div>
+            </div>
+        </td>
+        <td><button class="btn-del" onclick="this.closest('tr').remove()">×</button></td>
+    `;
+    // Add placeholder behaviour for contenteditable
+    tr.querySelectorAll('[data-ph]').forEach(el => {
+        if (!el.textContent.trim()) el.style.color = '#94a3b8';
+        el.addEventListener('focus', function() { if (!this.textContent.trim()) { this.textContent = ''; this.style.color = '#1e293b'; } });
+        el.addEventListener('blur', function() { if (!this.textContent.trim()) this.style.color = '#94a3b8'; });
+    });
+    tbody.appendChild(tr);
 }
 
-function sendEmail() {
-  const site = document.getElementById('siteName').value;
-  const focus = document.getElementById('dailyFocus').value;
-  const body = `Mader Prestart - ${site}%0D%0ASafety Focus: ${focus}%0D%0A%0D%0APlease see attached PDF for full details.`;
-  window.location.href = `mailto:?subject=Prestart Board - ${site}&body=${body}`;
+// Track what's being dragged so dragover can know the chip type
+let activeDragType = null;
+
+function onDragOver(e, zoneType) {
+    // Only allow drop if chip type matches zone type
+    if (activeDragType && activeDragType !== zoneType) {
+        // Show rejected cursor — do NOT call preventDefault, so drop is blocked
+        e.currentTarget.classList.add('drag-rejected');
+        return;
+    }
+    e.preventDefault();
+    e.currentTarget.classList.remove('drag-rejected');
+    e.currentTarget.classList.add('drag-over');
+}
+function onDragLeave(e) {
+    e.currentTarget.classList.remove('drag-over');
+    e.currentTarget.classList.remove('drag-rejected');
+}
+function onDrop(e, zoneType, zoneId) {
+    e.preventDefault();
+    const zone = document.getElementById(zoneId);
+    zone.classList.remove('drag-over');
+    zone.classList.remove('drag-rejected');
+    const text = e.dataTransfer.getData('text/plain');
+    const chipType = e.dataTransfer.getData('chip-type');
+
+    // Hard block: wrong type goes nowhere
+    if (chipType !== zoneType) {
+        zone.classList.add('drop-blocked');
+        setTimeout(() => zone.classList.remove('drop-blocked'), 600);
+        return;
+    }
+
+    const rowEl = zone.closest('tr');
+    const rid = rowEl.dataset.rowId;
+    const tagsAreaId = zoneType === 'hazard' ? `htags-${rid}` : `ctags-${rid}`;
+    const tagsArea = document.getElementById(tagsAreaId);
+    addDroppedTag(tagsArea, text, zoneType);
 }
 
-window.onload = () => { renderList('negatives'); renderList('positives'); renderList('successes'); renderTasks(); };
+function addDroppedTag(container, text, type) {
+    const tag = document.createElement('span');
+    tag.className = 'dropped-tag' + (type === 'control' ? ' control-tag' : '');
+    tag.innerHTML = `${text} <span class="rm" onclick="this.parentElement.remove()">×</span>`;
+    container.appendChild(tag);
+}
+
+// ── LIST ITEMS ──
+function addItem(listId, icon) {
+    const list = document.getElementById(listId);
+    const div = document.createElement('div');
+    div.className = 'list-item';
+    div.innerHTML = `<span>${icon}</span><input type="text" placeholder="Enter details..."><button class="btn-del" onclick="this.parentElement.remove()">×</button>`;
+    list.appendChild(div);
+    div.querySelector('input').focus();
+}
+
+// ── WEATHER ──
+async function getWeather() {
+    const city = document.getElementById('cityInp').value.trim() || 'Perth';
+    try {
+        const geo = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1`).then(r=>r.json());
+        if (!geo.results) return alert('City not found');
+        const { latitude, longitude } = geo.results[0];
+        const w = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&daily=precipitation_sum&timezone=auto`).then(r=>r.json());
+        document.getElementById('wTemp').textContent = Math.round(w.current_weather.temperature) + '°C';
+        document.getElementById('wWind').textContent = Math.round(w.current_weather.windspeed) + 'kph';
+        const rain = w.daily?.precipitation_sum?.[0];
+        document.getElementById('wRain').textContent = rain > 0 ? rain + 'mm' : 'Nil';
+    } catch(e) { alert('Weather unavailable'); }
+}
+
+// ── INIT ──
+renderPanel();
+
+// Pre-populate from whiteboard photo
+addRow({ team:'Josh\nMav', loc:'Train 1', task:'Panels', hazards:'Confined space\nCreating voids', controls:'Permit, spotter, gas monitor, remove 1 panel at a time' });
+addRow({ team:'Mika\nSteff', loc:'Marva', task:'Belt Scrapers', hazards:'Manual handling\nPinch points, Noise', controls:'Correct lifting technique, correct tooling, remain out of LOF' });
+addRow({ team:'Bryce\nRhys', loc:'C6', task:'Skirts / Spillage Chute', hazards:'Slips/trips/falls, Poor lighting, Crane lifts, hand & finger injuries, SIMOPS, hang-ups, hot works', controls:'Hearing protection, housekeeping, pre-starts, VOC, barricades & tags, positive comms' });
+addRow({ team:'"', loc:'Sizer 7', task:'Handrail', hazards:'Working at height', controls:'Check for hang-ups, charged hose, fire watch, extinguisher' });
+
+// Pre-populate safety items from board
+(function() {
+    const neg = document.getElementById('neg-list');
+    ['Hang-ups in chute above screen on B-Train'].forEach(t => {
+        addItem('neg-list', '⚠️');
+        neg.lastChild.querySelector('input').value = t;
+    });
+    const pos = document.getElementById('pos-list');
+    ['Stopped the job!!!'].forEach(t => {
+        addItem('pos-list', '✅');
+        pos.lastChild.querySelector('input').value = t;
+    });
+    const suc = document.getElementById('suc-list');
+    ['Steff – Identified the hang-up hazard', 'Josh & Bryce – improvising plates'].forEach(t => {
+        addItem('suc-list', '⭐');
+        suc.lastChild.querySelector('input').value = t;
+    });
+})();
+</script>
+<!-- jsPDF + AutoTable -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+<script>
+// ── COLLECT BOARD DATA ──
+function collectBoardData() {
+    const site = document.getElementById('cityInp').value.trim() || 'Unknown Site';
+    const date = new Date().toLocaleDateString('en-AU', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+    const dateISO = new Date().toISOString();
+
+    // Weather
+    const weather = {
+        site,
+        temp: document.getElementById('wTemp').textContent,
+        wind: document.getElementById('wWind').textContent,
+        rain: document.getElementById('wRain').textContent,
+    };
+
+    // Safety negatives
+    const negatives = [...document.querySelectorAll('#neg-list .list-item input')]
+        .map(i => i.value.trim()).filter(Boolean);
+
+    // Safety positives
+    const positives = [...document.querySelectorAll('#pos-list .list-item input')]
+        .map(i => i.value.trim()).filter(Boolean);
+
+    // Celebrating success
+    const successes = [...document.querySelectorAll('#suc-list .list-item input')]
+        .map(i => i.value.trim()).filter(Boolean);
+
+    // Daily focus
+    const dailyFocus = document.querySelector('.focus-ta')?.value?.trim() || '';
+
+    // Communication
+    const commInputs = document.querySelectorAll('.comm-input');
+    const comms = {
+        radioChannel: commInputs[0]?.value || '',
+        emergencyRadio: commInputs[1]?.value || '',
+        emergencyMobile: commInputs[2]?.value || '',
+        dsSuper: commInputs[3]?.value || '',
+        nsSuper: commInputs[4]?.value || '',
+    };
+
+    // Tasks — gather typed text + dropped tags
+    const tasks = [];
+    document.querySelectorAll('#taskBody tr').forEach(tr => {
+        const rid = tr.dataset.rowId;
+        const cells = tr.querySelectorAll('td');
+        if (!cells.length) return;
+
+        const getTA = (td) => {
+            const ce = td.querySelector('[contenteditable]');
+            return ce ? ce.textContent.trim() : (td.querySelector('textarea')?.value.trim() || '');
+        };
+        const getTags = (id) => [...document.querySelectorAll(`#${id} .dropped-tag`)]
+            .map(t => t.textContent.replace('×','').trim()).filter(Boolean);
+
+        const hazardText = getTA(cells[3]);
+        const hazardTags = getTags(`htags-${rid}`);
+        const controlText = getTA(cells[4]);
+        const controlTags = getTags(`ctags-${rid}`);
+
+        const allHazards = [...(hazardText ? [hazardText] : []), ...hazardTags];
+        const allControls = [...(controlText ? [controlText] : []), ...controlTags];
+
+        tasks.push({
+            team: cells[0].querySelector('textarea')?.value.trim() || '',
+            location: cells[1].querySelector('textarea')?.value.trim() || '',
+            task: cells[2].querySelector('textarea')?.value.trim() || '',
+            hazards: allHazards,
+            controls: allControls,
+        });
+    });
+
+    return { site, date, dateISO, weather, negatives, positives, successes, dailyFocus, comms, tasks };
+}
+
+// ── DATASET LOG (ready for backend hookup) ──
+function logToDataset(data) {
+    const record = {
+        timestamp: data.dateISO,
+        site: data.site,
+        weather: data.weather,
+        dailyFocus: data.dailyFocus,
+        hazards: data.tasks.flatMap(t => t.hazards),
+        controls: data.tasks.flatMap(t => t.controls),
+        taskCount: data.tasks.length,
+        safetyNegatives: data.negatives,
+        safetyPositives: data.positives,
+    };
+    console.group('📊 MADER Prestart Dataset Record');
+    console.log('Timestamp:', record.timestamp);
+    console.log('Site:', record.site);
+    console.log('Weather:', record.weather);
+    console.log('Daily Focus:', record.dailyFocus);
+    console.log('All Hazards:', record.hazards);
+    console.log('All Controls:', record.controls);
+    console.log('Task Count:', record.taskCount);
+    console.log('Safety Negatives:', record.safetyNegatives);
+    console.log('Safety Positives:', record.safetyPositives);
+    console.log('Full record object (for backend POST):', JSON.stringify(record, null, 2));
+    console.groupEnd();
+    // TODO: replace with fetch('/api/prestart', { method:'POST', body: JSON.stringify(record), headers:{'Content-Type':'application/json'} })
+    return record;
+}
+
+// ── TOAST ──
+function showToast(msg, type = '') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + type;
+    setTimeout(() => { t.className = 'toast'; }, 3500);
+}
+
+// ── SAVE PDF ──
+async function savePDF() {
+    const btn = document.querySelector('.pdf-btn');
+    btn.textContent = '⏳ Generating...';
+    btn.disabled = true;
+
+    await new Promise(r => setTimeout(r, 100)); // let UI update
+
+    const data = collectBoardData();
+    logToDataset(data);
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    const W = doc.internal.pageSize.getWidth();
+    const margin = 14;
+    let y = 0;
+
+    const YELLOW = [251, 191, 36];
+    const NAVY   = [15, 30, 53];
+    const WHITE  = [255, 255, 255];
+    const LIGHT  = [240, 244, 248];
+    const HAZARD = [254, 243, 199];
+    const HAZARD_TXT = [146, 64, 14];
+    const CTRL   = [220, 252, 231];
+    const CTRL_TXT = [22, 101, 52];
+
+    // ── HEADER BAND ──
+    doc.setFillColor(...NAVY);
+    doc.rect(0, 0, W, 22, 'F');
+    doc.setFillColor(...YELLOW);
+    doc.rect(0, 22, W, 3, 'F');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(20);
+    doc.setTextColor(...YELLOW);
+    doc.text('MADER', margin, 14);
+    doc.setFontSize(9);
+    doc.setTextColor(148, 163, 184);
+    doc.setFont('helvetica', 'normal');
+    doc.text('PRESTART BOARD REPORT', margin + 30, 14);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(...YELLOW);
+    doc.text('GEARED FOR SAFETY', W - margin, 10, { align: 'right' });
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(148, 163, 184);
+    doc.text(data.date, W - margin, 16, { align: 'right' });
+
+    y = 32;
+
+    // ── META ROW: Site + Weather + Focus ──
+    const metaH = 20;
+    // Site + weather box
+    doc.setFillColor(...LIGHT);
+    doc.roundedRect(margin, y, 130, metaH, 2, 2, 'F');
+    doc.setFillColor(...YELLOW);
+    doc.roundedRect(margin, y, 30, metaH, 2, 2, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(...NAVY);
+    doc.text('SITE / LOCATION', margin + 2, y + 5);
+    doc.setFontSize(11);
+    doc.text(data.site.toUpperCase(), margin + 2, y + 13);
+
+    doc.setFontSize(7);
+    doc.setTextColor(100, 116, 139);
+    doc.text('TEMP', margin + 36, y + 5);
+    doc.text('WIND', margin + 60, y + 5);
+    doc.text('RAIN', margin + 84, y + 5);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(...NAVY);
+    doc.text(data.weather.temp, margin + 36, y + 14);
+    doc.text(data.weather.wind, margin + 60, y + 14);
+    doc.text(data.weather.rain, margin + 84, y + 14);
+
+    // Daily focus box
+    const focusX = margin + 134;
+    const focusW = W - margin - focusX;
+    const labelW = 36;
+    doc.setFillColor(...NAVY);
+    doc.roundedRect(focusX, y, focusW, metaH, 2, 2, 'F');
+    doc.setFillColor(...YELLOW);
+    doc.roundedRect(focusX, y, labelW, metaH, 2, 2, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(6.5);
+    doc.setTextColor(...NAVY);
+    doc.text('DAILY', focusX + labelW / 2, y + 7, { align: 'center' });
+    doc.text('FOCUS', focusX + labelW / 2, y + 13, { align: 'center' });
+    const focusTextX = focusX + labelW + (focusW - labelW) / 2;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(...YELLOW);
+    doc.text((data.dailyFocus || 'NOT SET').toUpperCase(), focusTextX, y + 12.5, { align: 'center', maxWidth: focusW - labelW - 6 });
+    y += metaH + 6;
+
+    // ── SAFETY COLUMNS ──
+    const colW = (W - margin * 2 - 8) / 3;
+    const sections = [
+        { label: 'SAFETY NEGATIVES', items: data.negatives, color: [254,226,226], tcolor: [153,27,27] },
+        { label: 'SAFETY POSITIVES', items: data.positives, color: [220,252,231], tcolor: [22,101,52] },
+        { label: 'CELEBRATING SUCCESS', items: data.successes, color: [254,243,199], tcolor: [146,64,14] },
+    ];
+
+    const secH = sections.reduce((max, s) => Math.max(max, s.items.length), 0) * 5.5 + 14;
+    const safeSecH = Math.max(secH, 22);
+
+    sections.forEach((s, i) => {
+        const x = margin + i * (colW + 4);
+        doc.setFillColor(...s.color);
+        doc.roundedRect(x, y, colW, safeSecH, 2, 2, 'F');
+        doc.setFillColor(...s.tcolor);
+        doc.roundedRect(x, y, colW, 8, 2, 2, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(6.5);
+        doc.setTextColor(...WHITE);
+        doc.text(s.label, x + 3, y + 5.2);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7.5);
+        doc.setTextColor(30, 41, 59);
+        s.items.forEach((item, j) => {
+            doc.text('• ' + item, x + 3, y + 12 + j * 5.5, { maxWidth: colW - 6 });
+        });
+        if (!s.items.length) {
+            doc.setTextColor(148, 163, 184);
+            doc.setFontSize(7);
+            doc.text('None recorded', x + 3, y + 13);
+        }
+    });
+
+    y += safeSecH + 6;
+
+    // ── TASKS TABLE ──
+    doc.setFillColor(...NAVY);
+    doc.roundedRect(margin, y, W - margin * 2, 8, 2, 2, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(...YELLOW);
+    doc.text('TASKS FOR UPCOMING SHIFT', margin + 4, y + 5.5);
+    y += 10;
+
+    const taskRows = data.tasks.filter(t => t.team || t.task).map(t => [
+        t.team,
+        t.location,
+        t.task,
+        t.hazards.join('\n') || '—',
+        t.controls.join('\n') || '—',
+    ]);
+
+    doc.autoTable({
+        startY: y,
+        head: [['Team', 'Asset / Location', 'Task', '⚠ Hazards', '🛡 Controls']],
+        body: taskRows.length ? taskRows : [['—','—','—','—','—']],
+        margin: { left: margin, right: margin },
+        styles: { fontSize: 7.5, cellPadding: 3, overflow: 'linebreak', valign: 'top', font: 'helvetica' },
+        headStyles: { fillColor: [30, 58, 95], textColor: WHITE, fontStyle: 'bold', fontSize: 7 },
+        columnStyles: {
+            0: { cellWidth: 22 },
+            1: { cellWidth: 28 },
+            2: { cellWidth: 35 },
+            3: { cellWidth: 'auto', fillColor: HAZARD, textColor: HAZARD_TXT },
+            4: { cellWidth: 'auto', fillColor: CTRL, textColor: CTRL_TXT },
+        },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        didDrawPage: (d) => { y = d.cursor.y; }
+    });
+
+    y = doc.lastAutoTable.finalY + 6;
+
+    // ── COMMS FOOTER ──
+    if (y < doc.internal.pageSize.getHeight() - 30) {
+        const commW = (W - margin * 2) / 5;
+        const commLabels = ['Shut Radio Ch.', 'Emergency Radio', 'Emergency Mobile', 'D/S Supervisor', 'N/S Supervisor'];
+        const commVals = [data.comms.radioChannel, data.comms.emergencyRadio, data.comms.emergencyMobile, data.comms.dsSuper, data.comms.nsSuper];
+        commLabels.forEach((label, i) => {
+            const x = margin + i * (commW + 1);
+            doc.setFillColor(...NAVY);
+            doc.roundedRect(x, y, commW, 14, 1.5, 1.5, 'F');
+            doc.setFontSize(5.5);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(148, 163, 184);
+            doc.text(label.toUpperCase(), x + 3, y + 4.5);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(7.5);
+            doc.setTextColor(...WHITE);
+            doc.text(commVals[i] || '—', x + 3, y + 11, { maxWidth: commW - 5 });
+        });
+        y += 17;
+    }
+
+    // ── SIGN-OFF FOOTER ──
+    doc.setFillColor(...YELLOW);
+    doc.rect(0, doc.internal.pageSize.getHeight() - 8, W, 8, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(...NAVY);
+    doc.text('Sign onto JHAs + SWIs  |  Complete your Take5s & Pre-starts  |  GEARED FOR SAFETY', W / 2, doc.internal.pageSize.getHeight() - 3, { align: 'center' });
+
+    const filename = `MADER_Prestart_${data.site.replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}.pdf`;
+    doc.save(filename);
+
+    document.getElementById('saveStatus').textContent = `✓ Saved ${new Date().toLocaleTimeString('en-AU', {hour:'2-digit', minute:'2-digit'})}`;
+    showToast('✅ PDF saved — ' + filename, 'success');
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/></svg> Save PDF Report';
+    btn.disabled = false;
+}
+
+// ── EMAIL BOARD ──
+function emailBoard() {
+    const data = collectBoardData();
+    logToDataset(data);
+
+    const taskLines = data.tasks.filter(t => t.team || t.task).map(t =>
+        `  Team: ${t.team || '—'} | Location: ${t.location || '—'} | Task: ${t.task || '—'}\n` +
+        `  Hazards: ${t.hazards.join('; ') || '—'}\n` +
+        `  Controls: ${t.controls.join('; ') || '—'}`
+    ).join('\n\n');
+
+    const body = [
+        `MADER PRESTART BOARD — ${data.date}`,
+        `Site: ${data.site}`,
+        `Daily Safety Focus: ${data.dailyFocus || '—'}`,
+        ``,
+        `WEATHER`,
+        `  Temp: ${data.weather.temp}  |  Wind: ${data.weather.wind}  |  Rain: ${data.weather.rain}`,
+        ``,
+        `SAFETY NEGATIVES`,
+        ...(data.negatives.length ? data.negatives.map(n => `  • ${n}`) : ['  None recorded']),
+        ``,
+        `SAFETY POSITIVES`,
+        ...(data.positives.length ? data.positives.map(p => `  • ${p}`) : ['  None recorded']),
+        ``,
+        `CELEBRATING SUCCESS`,
+        ...(data.successes.length ? data.successes.map(s => `  ⭐ ${s}`) : ['  None recorded']),
+        ``,
+        `TASKS FOR UPCOMING SHIFT`,
+        taskLines || '  No tasks recorded',
+        ``,
+        `COMMUNICATION`,
+        `  Shut Radio: ${data.comms.radioChannel}`,
+        `  Emergency Radio: ${data.comms.emergencyRadio}`,
+        `  Emergency Mobile: ${data.comms.emergencyMobile}`,
+        `  D/S Supervisor: ${data.comms.dsSuper}`,
+        `  N/S Supervisor: ${data.comms.nsSuper}`,
+        ``,
+        `---`,
+        `Sign onto JHAs + SWIs · Complete your Take5s & Pre-starts`,
+        `MADER Infrastructure — Geared for Safety`,
+    ].join('\n');
+
+    const subject = encodeURIComponent(`MADER Prestart Board — ${data.site} — ${data.date}`);
+    const bodyEnc = encodeURIComponent(body);
+    window.location.href = `mailto:?subject=${subject}&body=${bodyEnc}`;
+
+    showToast('📧 Opening email app...', '');
+}
 </script>
 </body>
 </html>
